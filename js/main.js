@@ -19,14 +19,21 @@
 		}
 
 		defaults = {
-			template:        mainTemplate,
-			fieldSelector:   'input[type=hidden]',
-			selectSelector:  'select',
-			listSelector:    '.list',
-			searchSelector:  '.search',
-			resultsSelector: '.results',
-			querySelector:   'input[type=text]',
-			nonceSelector:   '#post_finder_nonce'
+			template:             mainTemplate,
+			fieldSelector:        'input[type=hidden]',
+			selectSelector:       'select',
+			listSelector:         '.list',
+			counterSelector:      '.counter',
+			searchSelector:       '.search',
+			searchButtonSelector: '.button',
+			resetSelector:        '.reset',
+			statusSelector:       '.status',
+			cancelSelector:       '.cancel',
+			statusLabelSelector:  '.status-label',
+			spinnerSelector:      '.spinner',
+			resultsSelector:      '.results',
+			querySelector:        'input[type=text]',
+			nonceSelector:        '#post_finder_nonce'
 		};
 
 		var plugin = this;
@@ -42,21 +49,22 @@
 			plugin.settings = $.extend({}, defaults, options);
 
 			// all jquery objects are fetched once and stored in the plugin object
-			plugin.$field   = $element.find(plugin.settings.fieldSelector),
-			plugin.$select  = $element.find(plugin.settings.selectSelector),
-			plugin.$list    = $element.find(plugin.settings.listSelector),
-			plugin.$search  = $element.find(plugin.settings.searchSelector),
-			plugin.$results = plugin.$search.find(plugin.settings.resultsSelector),
-			plugin.$query   = plugin.$search.find(plugin.settings.querySelector),
-			plugin.nonce    = $(plugin.settings.nonceSelector).val();
-
-			// bind select
-			plugin.$select.on('change', function(e){
-				plugin.add_item( $(this).val(), $('option:selected', this).text(), $('option:selected', this).data('permalink') );
-			});
+			plugin.$field        = $element.find(plugin.settings.fieldSelector),
+			plugin.$list         = $element.find(plugin.settings.listSelector),
+			plugin.$counter      = $element.find(plugin.settings.counterSelector),
+			plugin.$search       = $element.find(plugin.settings.searchSelector),
+			plugin.$searchButton = plugin.$search.find(plugin.settings.searchButtonSelector),
+			plugin.$reset        = plugin.$search.find(plugin.settings.resetSelector),
+			plugin.$status       = plugin.$search.find(plugin.settings.statusSelector),
+			plugin.$statusLabel  = plugin.$search.find(plugin.settings.statusLabelSelector),
+			plugin.$cancel       = plugin.$search.find(plugin.settings.cancelSelector),
+			plugin.$spinner      = plugin.$search.find(plugin.settings.spinnerSelector),
+			plugin.$results      = plugin.$search.find(plugin.settings.resultsSelector),
+			plugin.$query        = plugin.$search.find(plugin.settings.querySelector),
+			plugin.nonce         = $(plugin.settings.nonceSelector).val();
 
 			// bind search button
-			plugin.$search.find('.button').click(function(e){
+			plugin.$searchButton.click(function(e){
 				e.preventDefault();
 				plugin.search();
 			});
@@ -67,6 +75,12 @@
 					e.preventDefault();
 					plugin.search();
 				}
+			});
+
+			plugin.$reset.click(function(e){
+				e.preventDefault();
+				plugin.$search.find('input[type="text"]').val('');
+				plugin.search();
 			});
 
 			// bind list
@@ -150,11 +164,13 @@
 
 		plugin.add_item = function( id, title, permalink ) {//private method
 
+			var $count = plugin.$list.find('li').length;
+
 			// make sure we have an id
 			if( id == 0 )
 				return;
 
-			if( plugin.$list.find('li').length >= $element.data('limit') ) {
+			if( $count >= $element.data('limit') ) {
 				alert( POST_FINDER_CONFIG.max_number_allowed );
 				return;
 			}
@@ -174,11 +190,13 @@
 				pos:       plugin.$list.length + 1
 			}));
 
+			plugin.$counter.find('.current-count').html($count + 1);
+
 			// hide notice
 			plugin.$list.find('.notice').hide();
 
-			// remove from select if there
-			plugin.$select.find('option[value="' + id + '"]').remove();
+			// remove from the search list
+			plugin.$search.find('li[data-id="' + id + '"]').remove();
 
 			// update the input
 			plugin.serialize();
@@ -186,6 +204,10 @@
 
 		//Prv method to remove an item
 		plugin.remove_item = function( id ) {
+
+			var $count = plugin.$list.find('li').length;
+
+			plugin.$counter.find('.current-count').html($count -1);
 
 			plugin.$list.find('li[data-id="' + id + '"]').remove();
 
@@ -200,9 +222,12 @@
 		plugin.search = function() {
 
 			var html = '',
+				timeout = 500,
+				displayTimeout,
+				query = plugin.$query.val(),
 				data = {
 					action: 'pf_search_posts',
-					s: plugin.$query.val(),
+					s: query,
 					_ajax_nonce: plugin.nonce
 				};
 
@@ -210,28 +235,52 @@
 			data = $.extend(data, $element.data('args'));
 
 			// display loading
+			plugin.$searchButton.prop('disabled', true);
 			plugin.$search.addClass('loading');
+			plugin.$spinner.addClass('is-active');
+			plugin.$cancel.show();
+			plugin.$statusLabel.hide();
 
-			$.ajax(
+			if ('' !== query) {
+				plugin.$reset.show();
+			} else {
+				plugin.$reset.hide();
+			}
+
+			var request = $.ajax(
 				ajaxurl,
 				{
 					type: 'POST',
 					data: data,
 					success: function(response) {
 						if( typeof response.posts != "undefined" ) {
-							if ( response.posts.length > 0 ) {
-								for( var i in response.posts ) {
-									html += _.template(itemTemplate, response.posts[i]);
+							// Delay updating the post list to prevent the spinner from rapidly appearing and dissapearing when sear results are returned quickly.
+							displayTimeout = setTimeout(function(){
+								if ( response.posts.length > 0 ) {
+									for( var i in response.posts ) {
+										html += _.template(itemTemplate, response.posts[i]);
+									}
+								} else {
+									html = '<li>' + POST_FINDER_CONFIG.nothing_found + '</li>';
 								}
-							} else {
-								html = '<li>' + POST_FINDER_CONFIG.nothing_found + '</li>';
-							}
-							plugin.$results.html(html);
+								plugin.$results.html(html);
+								plugin.$spinner.removeClass('is-active');
+								plugin.$cancel.hide();
+								plugin.$searchButton.prop('disabled', false);
+							}, timeout);
 						}
 					},
 					dataType: 'json'
 				}
 			);
+
+			plugin.$cancel.click(function(e){
+				e.preventDefault();
+				clearTimeout(displayTimeout);
+				plugin.$spinner.removeClass('is-active');
+				plugin.$cancel.hide();
+				plugin.$searchButton.prop('disabled', false);
+			});
 		};
 
 		plugin.serialize = function() {

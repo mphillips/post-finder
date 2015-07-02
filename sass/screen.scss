@@ -1,6 +1,26 @@
 @import "compass/css3";
 @import "icons";
 
+%metabox {
+	@include box-sizing(border-box);
+	border: 1px solid #e5e5e5;
+	-webkit-box-shadow: 0 1px 1px rgba(0,0,0,0.04);
+	box-shadow: 0 1px 1px rgba(0,0,0,0.04);
+	background: #fff;
+}
+
+@mixin clearfix  {
+	zoom: 1;
+	&:before,
+	&:after {
+		content: "";
+		display: table;
+	}
+	&:after {
+		clear: both;
+	}
+}
+
 .post-finder {
 
 	/*max-width: 600px;*/
@@ -12,32 +32,44 @@
 			margin: 0;
 		}
 
-		background: #eee;
-		margin: 0;
-		padding: 1em;
-		border: 1px solid #ccc;
 		margin-bottom: 1em;
 
 		li {
-			border: 1px solid #ccc;
-			@include border-radius(0.75em);
-			@include background(linear-gradient(top, #eee, #ddd));
 			cursor: move;
 			margin-bottom: 1em;
 			list-style: none;
-			margin-left: 55px;
 			text-align: left;
 			position: relative;
-			height: 40px;
-			padding: 0.5em;
-			padding-right: 70px;
-			@include box-sizing(border-box);
+			padding: 15px;
+			height: 70px;
+			@extend %metabox;
 
-			input[type=text] {
-				position: absolute;
-				margin-left: -65px;
-				text-align: center;
-				padding: 2px 3px;
+			&.placeholder {
+				background: #e6e6e6;
+				-webkit-box-shadow: none;
+				box-shadow: none;
+				border: none;
+			}
+
+			.post {
+				margin-left: 105px;
+				position: relative;
+				height: 40px;
+				@include box-sizing(border-box);
+
+				span.order {
+					position: absolute;
+					margin-left: -100px;
+					text-align: center;
+					padding: 2px 3px;
+					font-size: 0.9em;
+
+					input[type=text] {
+						width: 40px;
+						margin-left: 0.3em;
+						margin-bottom: 0;
+					}
+				}
 			}
 
 			&:last-child {
@@ -45,35 +77,28 @@
 			}
 		}
 
-		span {
+		span.title {
 			text-overflow: ellipsis;
 			white-space: nowrap;
 			overflow: hidden;
-			float: left;
+			//float: left;
 			width: 100%;
 			margin-top: 4px;
 		}
 
 		nav {
-			position: absolute;
-			right: 0.5em;
-			top: 50%;
-			font-size: 14px;
-			margin-top: -7px;
 
 			a {
-				margin-right: 0.5em;
-				color: #999;
 				text-decoration: none;
 
 
 				&:last-child {
 					margin: 0;
 				}
+			}
 
-				&:hover {
-					color: #666;
-				}
+			.label {
+				display: none;
 			}
 		}
 	}
@@ -84,35 +109,186 @@
 
 	&.no-numbers {
 
-		.list li {
+		.list .post {
 			margin-left: 0;
 		}
 
-		.list li input[type=text] {
+		.list .post span.order {
 			display: none;
 		}
 	}
 
+	&.no-icons {
+
+		.post {
+			padding-right: 0px;
+		}
+
+		span.order {
+			line-height: 40px;
+		}
+
+		span.title {
+			margin-top: 0;
+		}
+
+		[class^="icon-"], [class*=" icon-"] {
+			font-family: 'Open Sans', sans-serif;
+		}
+	}
+
+	&.no-icons nav,
+	.search nav {
+
+		margin-top: 0.1em;
+
+		a {
+			padding-left: 0.5em;
+			padding-right: 0.5em;
+			border-right: 1px solid #ccc;
+			display: inline-block;
+			text-decoration: none;
+
+			&::before {
+				content: '';
+			}
+
+			&:first-child {
+				padding-left: 0;
+			}
+
+			&:last-child {
+				padding-right: 0;
+				border-right: none;
+			}
+
+			&.delete {
+				color: #a00;
+
+				&:hover {
+					color: #f00;
+				}
+			}
+		}
+
+		.label {
+			display: initial;
+		}
+	}
+
+	&.icons {
+		span.title {
+			line-height: 40px;
+		}
+
+		.list {
+			.post {
+				padding-left: 10px;
+				padding-right: 70px;
+			}
+
+			nav {
+				position: absolute;
+				right: 0.5em;
+				top: 50%;
+				font-size: 14px;
+				margin-top: -7px;
+
+				a {
+					margin-right: 0.5em;
+					color: #999;
+				}
+			}
+		}
+	}
+
 	.search {
-		
+
 		background: none;
+		font-size: 1em;
 
 		input {
 			width: 100%;
 			max-width: 400px;
-			margin-right: 1em;
+			margin-right: 0.5em;
+		}
+
+		li:nth-child(even) {
+			background-color: #f5f5f5;
+		}
+
+		.reset {
+			display: none;
 		}
 	}
 
 	.results {
 
+		@extend %metabox;
+		border: 1px solid #d9d9d9;
+
 		li {
-			padding: 0.5em 1em;
-			border-bottom: 1px dotted #ccc;
+			position: relative;
+			padding: 1em;
+			margin: 0;
+			border-bottom: 1px solid #d9d9d9;
+
+			&:last-child {
+				border-bottom: none;
+			}
 		}
 
 		a {
+			line-height: 1;
+		}
+
+		.date {
+			position: absolute;
+			right: 15px;
+			top: 0;
+			line-height: 64px;
+		}
+	}
+
+	.handle {
+		display: block;
+		position: absolute;
+		top: 7px;
+		left: 6px;
+		background: url(../images/drag-handle.png) top left repeat-y;
+		background-size: 100%;
+		width: 6px;
+		height: 56px;
+		opacity: 0.1;
+	}
+
+	.statuses {
+		margin: 1.5em 0 0.5em 0;
+		height: 22px;
+		@include clearfix;
+
+		.status {
+			float: left;
+		}
+
+		.reset {
 			float: right;
+		}
+
+		.cancel {
+			display: none;
+		}
+	}
+
+	.spinner {
+		float: none;
+		display: none;
+		visibility: hidden;
+		margin: 0 0.5em 0 0;
+
+		&.is-active {
+			display: inline-block;
+			visibility: visible;
 		}
 	}
 }

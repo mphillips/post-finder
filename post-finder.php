@@ -52,8 +52,8 @@ class NS_Post_Finder {
 			'POST_FINDER_CONFIG',
 			array(
 				'adminurl'           => admin_url(),
-				'nothing_found'      => esc_html__( 'Nothing Found', 'post_finder' ),
-				'max_number_allowed' => esc_html__( 'Sorry, maximum number of items added.', 'post_finder' ),
+				'nothing_found'      => esc_html__( 'No posts found.', 'post_finder' ),
+				'max_number_allowed' => esc_html__( 'Sorry, the maximum number of items has been reached.', 'post_finder' ),
 				'already_added'      => esc_html__( 'Sorry, that item has already been added.', 'post_finder' )
 			)
 		);
@@ -107,19 +107,26 @@ class NS_Post_Finder {
 	private function render_js_templates() {
 		$main_template =
 			'<li data-id="<%= id %>">
-				<input type="text" size="3" maxlength="3" max="3" value="<%= pos %>">
-				<span><%= title %></span>
-				<nav>
-					<a href="<%= edit_url %>" class="icon-pencil" target="_blank" title="Edit"></a>
-					<a href="<%= permalink %>" class="icon-eye" target="_blank" title="View"></a>
-					<a href="#" class="icon-remove" title="Remove"></a>
-				</nav>
+				<div class="handle"></div>
+				<div class="post">
+					<span class="order">Order <input type="text" size="3" maxlength="3" max="3" value="<%= pos %>"></span>
+					<span class="title"><%= title %></span>
+					<nav>
+						<a href="<%= edit_url %>" class="icon-pencil" target="_blank" title="Edit"><span class="label">Edit Post</span></a>
+						<a href="<%= permalink %>" class="icon-eye" target="_blank" title="View"><span class="label">View Post</span></a>
+						<a href="#" class="icon-remove delete" title="Remove"><span class="label">Remove from Curation</span></a>
+					</nav>
+				</div>
 			</li>';
 
 		$item_template =
 			'<li data-id="<%= ID %>" data-permalink="<%= permalink %>">
-				<a href="#" class="add">Add</a>
 				<span><%= post_title %></span>
+				<nav>
+					<a href="#" class="add"><span class="label">Add to curation</span></a>
+					<a href="<%= permalink %>" class="view" target="_blank"><span class="label">View post</span></a>
+				</nav>
+				<span class="date"><%= date %></span>
 			</li>';
 
 		// allow for filtering / overriding of templates
@@ -144,7 +151,12 @@ class NS_Post_Finder {
 				'title' => true,
 			),
 			'nav' => array(),
-			'span' => array()
+			'span' => array(
+				'class' => true,
+			),
+			'div' => array(
+				'class' => true,
+			),
 		);
 
 		?>
@@ -178,9 +190,10 @@ class NS_Post_Finder {
 	public static function render( $name, $value, $options = array() ) {
 
 		$options = wp_parse_args( $options, array(
-			'show_numbers'   => true, // display # next to post
-			'limit'          => 10,
-			'include_script' => true, // Should the <script> tags to init post finder be included or not
+			'show_numbers'      => true, // display numbers next to post
+			'show_icons'        => true, // show icon or text actions
+			'limit'             => 10,
+			'include_script'    => true, // Should the <script> tags to init post finder be included or not
 		));
 		$options = apply_filters( 'post_finder_render_options', $options );
 
@@ -230,13 +243,16 @@ class NS_Post_Finder {
 			$args['post__not_in'] = $post_ids;
 		}
 
-		// get recent posts
-		$recent_posts = get_posts( apply_filters( 'post_finder_' . $name . '_recent_post_args', $args ) );
-
 		$class = 'post-finder';
 
 		if( !$options['show_numbers'] ) {
 			$class .= ' no-numbers';
+		}
+
+		if( !$options['show_icons'] ) {
+			$class .= ' no-icons';
+		} else {
+			$class .= ' icons';
 		}
 
 		?>
@@ -250,13 +266,16 @@ class NS_Post_Finder {
 					foreach( $posts as $post ) {
 						printf(
 							'<li data-id="%s">' .
-								'<input type="text" size="3" maxlength="3" max="3" value="%s">' .
-								'<span>%s</span>' .
-								'<nav>' .
-									'<a href="%s" class="icon-pencil" target="_blank" title="Edit"></a>' .
-									'<a href="%s" class="icon-eye" target="_blank" title="View"></a>' .
-									'<a href="#" class="icon-remove" title="Remove"></a>' .
-								'</nav>' .
+								'<div class="handle"></div>' .
+								'<div class="post">' .
+									'<span class="order">Order <input type="text" size="3" maxlength="3" max="3" value="%s"></span>' .
+									'<span class="title">%s</span>' .
+									'<nav>' .
+										'<a href="%s" class="icon-pencil" target="_blank" title="Edit"><span class="label">Edit Post</span></a>' .
+										'<a href="%s" class="icon-eye" target="_blank" title="View"><span class="label">View Post</span></a>' .
+										'<a href="#" class="icon-remove delete" title="Remove"><span class="label">Remove from Curation</span></a>' .
+									'</nav>' .
+								'</div>' .
 							'</li>',
 							intval( $post->ID ),
 							intval( $i ),
@@ -273,22 +292,43 @@ class NS_Post_Finder {
 				?>
 			</ul>
 
-			<?php if( $recent_posts ) : ?>
-			<h4>Select a Recent <?php echo esc_html( $singular ); ?></h4>
-			<select>
-				<option value="0">Choose <?php echo esc_html( $singular_article ) . ' ' . esc_html( $singular ); ?></option>
-				<?php foreach( $recent_posts as $post ) : ?>
-				<option value="<?php echo intval( $post->ID ); ?>" data-permalink="<?php echo esc_attr( get_permalink( $post->ID ) ); ?>"><?php echo esc_html( apply_filters( 'post_finder_item_label', $post->post_title, $post ) ); ?></option>
-				<?php endforeach; ?>
-			</select>
-			<?php endif; ?>
+			<p class="counter">
+				<?php printf( __( '<span class="current-count">%d</span> of <span class="max-count">%d</span> maximum items', 'post_finder' ), intval( count( $posts ) ), intval( $options['limit'] ) ); ?>
+			</p>
+
+			<h2>Add an Article</h2>
 
 			<div class="search">
-				<h4>Search for <?php echo esc_html( $singular_article ) . ' ' . esc_html( $singular ); ?></h4>
-				<input type="text" placeholder="Enter a term or phrase">
+				<labe for="search-field">Search <input type="text" placeholder="Enter a term or phrase" id="search-field"></labe>
 				<button class="button">Search</button>
-				<ul class="results"></ul>
+
+				<div class="statuses">
+					<div class="status"><span class="spinner"></span><span class="status-label">Recent Content</span><span class="cancel"><a href="#">Cancel</a></span></div>
+					<div class="reset"><a href="#">View most recent content</a></div>
+				</div>
+
+				<ul class="results">
+
+					<?php
+					// get recent posts
+					$recent_posts = get_posts( apply_filters( 'post_finder_' . $name . '_recent_post_args', $args ) );
+
+					if( $recent_posts ) : ?>
+						<?php foreach( $recent_posts as $post ) : ?>
+							<li data-id="<?php echo intval( $post->ID ); ?>" data-permalink="<?php echo esc_attr( get_permalink( $post->ID ) ); ?>">
+								<span><?php echo esc_html( apply_filters( 'post_finder_item_label', $post->post_title, $post ) ); ?></span>
+								<nav>
+									<a href="#" class="add"><span class="label">Add to curation</span></a>
+									<a href="<?php echo esc_attr( get_permalink( $post->ID ) ); ?>" class="view" target="_blank"><span class="label">View post</span></a>
+								</nav>
+								<span class="date"><?php echo esc_html( mysql2date( 'F j, Y', $post->post_date ) ); ?></span>
+							</li>
+						<?php endforeach; ?>
+					<?php endif; ?>
+
+				</ul>
 			</div>
+
 		</div>
 		<?php
 		if ( $options['include_script'] ) {
@@ -383,9 +423,10 @@ class NS_Post_Finder {
 		// allow search args to be filtered
 		$posts = get_posts( apply_filters( 'post_finder_search_args', $args ) );
 
-		// Get the permalink so that View/Edit links work
+		// Get the additional data to pass to the template
 		foreach( $posts as $key => $post ) {
 			$posts[ $key ]->permalink = get_permalink( $post->ID );
+			$posts[ $key ]->date = esc_html( mysql2date( 'F j, Y', $post->post_date ) );
 		}
 
 		$posts = apply_filters( 'post_finder_search_results', $posts );
