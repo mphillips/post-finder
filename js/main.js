@@ -201,7 +201,7 @@
 			// hide notice
 			plugin.$list.find('.notice').hide();
 
-			// remove from the list
+			// remove from the lists
 			plugin.$select.find('option[value="' + id + '"]').remove();
 			plugin.$search.find('li[data-id="' + id + '"]').remove();
 
@@ -261,6 +261,7 @@
 					data: data,
 					success: function(response) {
 						if( typeof response.posts != "undefined" ) {
+
 							// Delay updating the post list to prevent the spinner from rapidly appearing and dissapearing when sear results are returned quickly.
 							displayTimeout = setTimeout(function(){
 								if ( response.posts.length > 0 ) {
@@ -282,6 +283,7 @@
 				}
 			);
 
+			// user cancels serch
 			plugin.$cancel.click(function(e){
 				e.preventDefault();
 				clearTimeout(displayTimeout);

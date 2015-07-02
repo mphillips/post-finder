@@ -112,8 +112,7 @@ class NS_Post_Finder {
 					<span class="order">Order <input type="text" size="3" maxlength="3" max="3" value="<%= pos %>"></span>
 					<span class="title"><%= title %></span>
 					<nav>
-						<a href="<%= edit_url %>" class="icon-pencil" target="_blank" title="Edit"><span class="label">Edit</span></a>
-						<a href="<%= permalink %>" class="icon-eye" target="_blank" title="View"><span class="label">View</span></a>
+						<a href="<%= edit_url %>" class="icon-pencil" target="_blank" title="Edit"><span class="label">Edit</span></a><a href="<%= permalink %>" class="icon-eye" target="_blank" title="View"><span class="label">View</span></a>
 						<a href="#" class="icon-remove delete" title="Remove"><span class="label">Remove</span></a>
 					</nav>
 				</div>
@@ -124,8 +123,7 @@ class NS_Post_Finder {
 				<div class="post">
 					<span class="title"><%= post_title %></span>
 					<nav>
-						<a href="#" class="add"><span class="label">Add</span></a>
-						<a href="<%= permalink %>" class="view" target="_blank"><span class="label">View</span></a>
+						<a href="#" class="add"><span class="label">Add</span></a><a href="<%= permalink %>" class="view" target="_blank"><span class="label">View</span></a>
 					</nav>
 					<span class="date"><%= date %></span>
 				</div>
@@ -349,8 +347,7 @@ class NS_Post_Finder {
 									<div class="post">
 										<span class="title"><?php echo esc_html( apply_filters( 'post_finder_item_label', $post->post_title, $post ) ); ?></span>
 										<nav>
-											<a href="#" class="add"><span class="label">Add</span></a>
-											<a href="<?php echo esc_attr( get_permalink( $post->ID ) ); ?>" class="view" target="_blank"><span class="label">View</span></a>
+											<a href="#" class="add"><span class="label">Add</span></a><a href="<?php echo esc_attr( get_permalink( $post->ID ) ); ?>" class="view" target="_blank"><span class="label">View</span></a>
 										</nav>
 										<span class="date"><?php echo esc_html( mysql2date( 'F j, Y', $post->post_date ) ); ?></span>
 									</div>
