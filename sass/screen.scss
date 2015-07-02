@@ -52,10 +52,15 @@
 			}
 
 			.post {
-				margin-left: 105px;
+				padding-left: 10px;
+				margin-left: 95px;
 				position: relative;
 				height: 40px;
 				@include box-sizing(border-box);
+
+				.widget & {
+					margin-left: 0;
+				}
 
 				span.order {
 					position: absolute;
@@ -64,6 +69,10 @@
 					padding: 2px 3px;
 					font-size: 0.9em;
 
+					.widget & {
+						display: none;
+					}
+
 					input[type=text] {
 						width: 40px;
 						margin-left: 0.3em;
@@ -71,19 +80,6 @@
 					}
 				}
 			}
-
-			&:last-child {
-				margin-bottom: 0;
-			}
-		}
-
-		span.title {
-			text-overflow: ellipsis;
-			white-space: nowrap;
-			overflow: hidden;
-			//float: left;
-			width: 100%;
-			margin-top: 4px;
 		}
 
 		nav {
@@ -104,7 +100,7 @@
 	}
 
 	select {
-		max-width: 100%;
+		width: 100%
 	}
 
 	&.no-numbers {
@@ -128,7 +124,7 @@
 			line-height: 40px;
 		}
 
-		span.title {
+		.title {
 			margin-top: 0;
 		}
 
@@ -140,7 +136,8 @@
 	&.no-icons nav,
 	.search nav {
 
-		margin-top: 0.1em;
+		padding-top: 0.2em;
+		clear: both;
 
 		a {
 			padding-left: 0.5em;
@@ -177,19 +174,19 @@
 	}
 
 	&.icons {
-		span.title {
-			line-height: 40px;
-		}
 
 		.list {
 			.post {
-				padding-left: 10px;
-				padding-right: 70px;
+				padding-right: 90px;
+			}
+
+			.title {
+				line-height: 40px;
 			}
 
 			nav {
 				position: absolute;
-				right: 0.5em;
+				right: 0;
 				top: 50%;
 				font-size: 14px;
 				margin-top: -7px;
@@ -211,6 +208,10 @@
 			width: 100%;
 			max-width: 400px;
 			margin-right: 0.5em;
+
+			.widget & {
+				margin-top: 0.2em;
+			}
 		}
 
 		li:nth-child(even) {
@@ -220,33 +221,59 @@
 		.reset {
 			display: none;
 		}
-	}
 
-	.results {
-
-		@extend %metabox;
-		border: 1px solid #d9d9d9;
-
-		li {
-			position: relative;
-			padding: 1em;
-			margin: 0;
-			border-bottom: 1px solid #d9d9d9;
-
-			&:last-child {
-				border-bottom: none;
+		.button {
+			.widget & {
+				margin-top: 0.5em;
 			}
 		}
+	}
 
-		a {
-			line-height: 1;
-		}
+	.results-container {
+		margin-bottom: 1.5em;
 
-		.date {
-			position: absolute;
-			right: 15px;
-			top: 0;
-			line-height: 64px;
+		.results {
+			@extend %metabox;
+			border: 1px solid #d9d9d9;
+			display: none;
+
+			&.full {
+				display: block;
+			}
+
+			li {
+				position: relative;
+				padding: 1em;
+				margin: 0;
+				border-bottom: 1px solid #d9d9d9;
+
+				&:last-child {
+					border-bottom: none;
+				}
+			}
+
+			.post {
+				padding-right: 130px;
+
+				.widget & {
+					padding-right: 0;
+				}
+			}
+
+			a {
+				line-height: 1;
+			}
+
+			.date {
+				position: absolute;
+				right: 15px;
+				top: 0;
+				line-height: 64px;
+
+				.widget & {
+					display: none;
+				}
+			}
 		}
 	}
 
@@ -263,7 +290,7 @@
 	}
 
 	.statuses {
-		margin: 1.5em 0 0.5em 0;
+		margin: 1em 0 0.5em 0;
 		height: 22px;
 		@include clearfix;
 
@@ -290,5 +317,21 @@
 			display: inline-block;
 			visibility: visible;
 		}
+	}
+
+	.title {
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		overflow: hidden;
+		float: left;
+		width: 100%;
+	}
+
+	.widget & .add-item-heading {
+		font-weight: bold;
+		font-size: 1em;
+		margin: 2em 0 1em 0;
+		padding: 0;
+		line-height: 1;
 	}
 }

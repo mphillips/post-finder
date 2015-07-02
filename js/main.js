@@ -52,6 +52,7 @@
 			plugin.$field        = $element.find(plugin.settings.fieldSelector),
 			plugin.$list         = $element.find(plugin.settings.listSelector),
 			plugin.$counter      = $element.find(plugin.settings.counterSelector),
+			plugin.$select       = $element.find(plugin.settings.selectSelector),
 			plugin.$search       = $element.find(plugin.settings.searchSelector),
 			plugin.$searchButton = plugin.$search.find(plugin.settings.searchButtonSelector),
 			plugin.$reset        = plugin.$search.find(plugin.settings.resetSelector),
@@ -62,6 +63,11 @@
 			plugin.$results      = plugin.$search.find(plugin.settings.resultsSelector),
 			plugin.$query        = plugin.$search.find(plugin.settings.querySelector),
 			plugin.nonce         = $(plugin.settings.nonceSelector).val();
+
+			// bind select
+			plugin.$select.on('change', function(e){
+				plugin.add_item( $(this).val(), $('option:selected', this).text(), $('option:selected', this).data('permalink') );
+			});
 
 			// bind search button
 			plugin.$searchButton.click(function(e){
@@ -101,7 +107,7 @@
 			plugin.$results.on('click', '.add', function(e){
 				e.preventDefault();
 				$li = $(this).closest('li');
-				plugin.add_item( $li.data('id'), $li.find('span').text(), $li.data('permalink') );
+				plugin.add_item( $li.data('id'), $li.find('.title').text(), $li.data('permalink') );
 			});
 
 			// bind number inputs
@@ -195,7 +201,8 @@
 			// hide notice
 			plugin.$list.find('.notice').hide();
 
-			// remove from the search list
+			// remove from the list
+			plugin.$select.find('option[value="' + id + '"]').remove();
 			plugin.$search.find('li[data-id="' + id + '"]').remove();
 
 			// update the input
@@ -264,6 +271,7 @@
 									html = '<li>' + POST_FINDER_CONFIG.nothing_found + '</li>';
 								}
 								plugin.$results.html(html);
+								plugin.$results.addClass('full');
 								plugin.$spinner.removeClass('is-active');
 								plugin.$cancel.hide();
 								plugin.$searchButton.prop('disabled', false);
