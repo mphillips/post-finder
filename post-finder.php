@@ -123,6 +123,7 @@ class NS_Post_Finder {
 				<div class="post">
 					<span class="title"><%= post_title %></span>
 					<nav>
+						<span class="status">Added</span>
 						<a href="#" class="add"><span class="label">Add</span></a><a href="<%= permalink %>" class="view" target="_blank"><span class="label">View</span></a>
 					</nav>
 					<span class="date"><%= date %></span>
@@ -294,68 +295,72 @@ class NS_Post_Finder {
 			</ul>
 
 			<p class="counter">
-				<?php printf( __( '<span class="current-count">%d</span> of <span class="max-count">%d</span> maximum items', 'post_finder' ), intval( count( $posts ) ), intval( $options['limit'] ) ); ?>
+				<?php printf( __( '<span class="current-count">%d</span> of <span class="max-count">%d</span> maximum items', 'post_finder' ), intval( count( $posts ) ), intval( $options['limit'] ) ); ?> <span class="message">You'll need to remove an item from the list before you can add another.</span>
 			</p>
 
-			<h2 class="add-item-heading">Add <?php echo esc_html( $singular_article ) . ' ' . esc_html( $singular ); ?></h2>
+				<div class="search-container">
 
-			<?php
-			// get recent posts
-			$recent_posts = get_posts( apply_filters( 'post_finder_' . $name . '_recent_post_args', $args ) );
-
-			if( $recent_posts && true === $options['show_recent_select_list'] ) : ?>
-				<p>
-					<select>
-						<option value="0">Choose <?php echo esc_html( $singular_article ) . ' ' . esc_html( $singular ); ?></option>
-						<?php foreach( $recent_posts as $post ) : ?>
-						<option value="<?php echo intval( $post->ID ); ?>" data-permalink="<?php echo esc_attr( get_permalink( $post->ID ) ); ?>"><?php echo esc_html( apply_filters( 'post_finder_item_label', $post->post_title, $post ) ); ?></option>
-						<?php endforeach; ?>
-					</select>
-				</p>
-			<?php
-			endif; ?>
-
-			<div class="search">
-				<labe for="search-field">Search <input type="text" placeholder="Enter a term or phrase" id="search-field"></labe>
-				<button class="button">Search</button>
-
-				<?php //if ( true !== $options['show_recent_select_list'] ) : ?>
-					<div class="statuses">
-						<div class="status">
-							<span class="spinner"></span>
-							<?php if ( true !== $options['show_recent_select_list'] ) : ?>
-								<span class="status-label">Recent Content</span>
-							<?php endif; ?>
-							<span class="cancel"><a href="#">Cancel</a></span>
-						</div>
-						<div class="reset"><a href="#">View most recent content</a></div>
-					</div>
-				<?php //endif; ?>
+				<h2 class="add-item-heading">Add <?php echo esc_html( $singular_article ) . ' ' . esc_html( $singular ); ?></h2>
 
 				<?php
-				$results_class = 'results';
-				if( true !== $options['show_recent_select_list'] ) {
-					$results_class .= ' full';
-				} ?>
+				// get recent posts
+				$recent_posts = get_posts( apply_filters( 'post_finder_' . $name . '_recent_post_args', $args ) );
 
-				<div class="results-container">
-					<ul class="<?php echo esc_attr( $results_class ); ?>">
-						<?php
-						if( $recent_posts && true !== $options['show_recent_select_list'] ) :
-							foreach( $recent_posts as $post ) : ?>
-								<li data-id="<?php echo intval( $post->ID ); ?>" data-permalink="<?php echo esc_attr( get_permalink( $post->ID ) ); ?>">
-									<div class="post">
-										<span class="title"><?php echo esc_html( apply_filters( 'post_finder_item_label', $post->post_title, $post ) ); ?></span>
-										<nav>
-											<a href="#" class="add"><span class="label">Add</span></a><a href="<?php echo esc_attr( get_permalink( $post->ID ) ); ?>" class="view" target="_blank"><span class="label">View</span></a>
-										</nav>
-										<span class="date"><?php echo esc_html( mysql2date( 'F j, Y', $post->post_date ) ); ?></span>
-									</div>
-								</li>
+				if( $recent_posts && true === $options['show_recent_select_list'] ) : ?>
+					<p>
+						<select>
+							<option value="0">Choose <?php echo esc_html( $singular_article ) . ' ' . esc_html( $singular ); ?></option>
+							<?php foreach( $recent_posts as $post ) : ?>
+							<option value="<?php echo intval( $post->ID ); ?>" data-permalink="<?php echo esc_attr( get_permalink( $post->ID ) ); ?>"><?php echo esc_html( apply_filters( 'post_finder_item_label', $post->post_title, $post ) ); ?></option>
+							<?php endforeach; ?>
+						</select>
+					</p>
+				<?php
+				endif; ?>
+
+				<div class="search">
+					<labe for="search-field">Search <input type="text" placeholder="Enter a term or phrase" id="search-field"></labe>
+					<button class="button">Search</button>
+
+					<?php //if ( true !== $options['show_recent_select_list'] ) : ?>
+						<div class="statuses">
+							<div class="status">
+								<span class="spinner"></span>
+								<?php if ( true !== $options['show_recent_select_list'] ) : ?>
+									<span class="status-label">Recent Content</span>
+								<?php endif; ?>
+								<span class="cancel"><a href="#">Cancel</a></span>
+							</div>
+							<div class="reset"><a href="#">View most recent content</a></div>
+						</div>
+					<?php //endif; ?>
+
+					<?php
+					$results_class = 'results';
+					if( true !== $options['show_recent_select_list'] ) {
+						$results_class .= ' full';
+					} ?>
+
+					<div class="results-container">
+						<ul class="<?php echo esc_attr( $results_class ); ?>">
 							<?php
-							endforeach;
-						endif; ?>
-					</ul>
+							if( $recent_posts && true !== $options['show_recent_select_list'] ) :
+								foreach( $recent_posts as $post ) : ?>
+									<li data-id="<?php echo intval( $post->ID ); ?>" data-permalink="<?php echo esc_attr( get_permalink( $post->ID ) ); ?>">
+										<div class="post">
+											<span class="title"><?php echo esc_html( apply_filters( 'post_finder_item_label', $post->post_title, $post ) ); ?></span>
+											<nav>
+												<span class="status">Added</span>
+												<a href="#" class="add"><span class="label">Add</span></a><a href="<?php echo esc_attr( get_permalink( $post->ID ) ); ?>" class="view" target="_blank"><span class="label">View</span></a>
+											</nav>
+											<span class="date"><?php echo esc_html( mysql2date( 'F j, Y', $post->post_date ) ); ?></span>
+										</div>
+									</li>
+								<?php
+								endforeach;
+							endif; ?>
+						</ul>
+					</div>
 				</div>
 			</div>
 

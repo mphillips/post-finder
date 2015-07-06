@@ -19,21 +19,22 @@
 		}
 
 		defaults = {
-			template:             mainTemplate,
-			fieldSelector:        'input[type=hidden]',
-			selectSelector:       'select',
-			listSelector:         '.list',
-			counterSelector:      '.counter',
-			searchSelector:       '.search',
-			searchButtonSelector: '.button',
-			resetSelector:        '.reset',
-			statusSelector:       '.status',
-			cancelSelector:       '.cancel',
-			statusLabelSelector:  '.status-label',
-			spinnerSelector:      '.spinner',
-			resultsSelector:      '.results',
-			querySelector:        'input[type=text]',
-			nonceSelector:        '#post_finder_nonce'
+			template:                mainTemplate,
+			fieldSelector:           'input[type=hidden]',
+			selectSelector:          'select',
+			listSelector:            '.list',
+			counterSelector:         '.counter',
+			searchContainerSelector: '.search-container',
+			searchSelector:          '.search',
+			searchButtonSelector:    '.button',
+			resetSelector:           '.reset',
+			statusSelector:          '.status',
+			cancelSelector:          '.cancel',
+			statusLabelSelector:     '.status-label',
+			spinnerSelector:         '.spinner',
+			resultsSelector:         '.results',
+			querySelector:           'input[type=text]',
+			nonceSelector:           '#post_finder_nonce'
 		};
 
 		var plugin = this;
@@ -49,20 +50,21 @@
 			plugin.settings = $.extend({}, defaults, options);
 
 			// all jquery objects are fetched once and stored in the plugin object
-			plugin.$field        = $element.find(plugin.settings.fieldSelector),
-			plugin.$list         = $element.find(plugin.settings.listSelector),
-			plugin.$counter      = $element.find(plugin.settings.counterSelector),
-			plugin.$select       = $element.find(plugin.settings.selectSelector),
-			plugin.$search       = $element.find(plugin.settings.searchSelector),
-			plugin.$searchButton = plugin.$search.find(plugin.settings.searchButtonSelector),
-			plugin.$reset        = plugin.$search.find(plugin.settings.resetSelector),
-			plugin.$status       = plugin.$search.find(plugin.settings.statusSelector),
-			plugin.$statusLabel  = plugin.$search.find(plugin.settings.statusLabelSelector),
-			plugin.$cancel       = plugin.$search.find(plugin.settings.cancelSelector),
-			plugin.$spinner      = plugin.$search.find(plugin.settings.spinnerSelector),
-			plugin.$results      = plugin.$search.find(plugin.settings.resultsSelector),
-			plugin.$query        = plugin.$search.find(plugin.settings.querySelector),
-			plugin.nonce         = $(plugin.settings.nonceSelector).val();
+			plugin.$field           = $element.find(plugin.settings.fieldSelector),
+			plugin.$list            = $element.find(plugin.settings.listSelector),
+			plugin.$counter         = $element.find(plugin.settings.counterSelector),
+			plugin.$select          = $element.find(plugin.settings.selectSelector),
+			plugin.$searchContainer = $element.find(plugin.settings.searchContainerSelector),
+			plugin.$search          = $element.find(plugin.settings.searchSelector),
+			plugin.$searchButton    = plugin.$search.find(plugin.settings.searchButtonSelector),
+			plugin.$reset           = plugin.$search.find(plugin.settings.resetSelector),
+			plugin.$status          = plugin.$search.find(plugin.settings.statusSelector),
+			plugin.$statusLabel     = plugin.$search.find(plugin.settings.statusLabelSelector),
+			plugin.$cancel          = plugin.$search.find(plugin.settings.cancelSelector),
+			plugin.$spinner         = plugin.$search.find(plugin.settings.spinnerSelector),
+			plugin.$results         = plugin.$search.find(plugin.settings.resultsSelector),
+			plugin.$query           = plugin.$search.find(plugin.settings.querySelector),
+			plugin.nonce            = $(plugin.settings.nonceSelector).val();
 
 			// bind select
 			plugin.$select.on('change', function(e){
@@ -122,6 +124,8 @@
 			plugin.$list.on('blur', 'li input', function(e){
 				plugin.move_item( $(this).closest('li'), $(this).val() );
 			});
+
+			plugin.check_limit();
 		};
 
 		// move an element to a specific position if possible
@@ -170,13 +174,11 @@
 
 		plugin.add_item = function( id, title, permalink ) {//private method
 
-			var $count = plugin.$list.find('li').length;
-
 			// make sure we have an id
 			if( id == 0 )
 				return;
 
-			if( $count >= $element.data('limit') ) {
+			if( plugin.limit_reached() ) {
 				alert( POST_FINDER_CONFIG.max_number_allowed );
 				return;
 			}
@@ -196,14 +198,16 @@
 				pos:       plugin.$list.length + 1
 			}));
 
-			plugin.$counter.find('.current-count').html($count + 1);
+			plugin.update_counter();
 
 			// hide notice
 			plugin.$list.find('.notice').hide();
 
 			// remove from the lists
 			plugin.$select.find('option[value="' + id + '"]').remove();
-			plugin.$search.find('li[data-id="' + id + '"]').remove();
+			plugin.$search.find('li[data-id="' + id + '"]').addClass('added');
+
+			plugin.check_limit();
 
 			// update the input
 			plugin.serialize();
@@ -211,12 +215,9 @@
 
 		//Prv method to remove an item
 		plugin.remove_item = function( id ) {
-
-			var $count = plugin.$list.find('li').length;
-
-			plugin.$counter.find('.current-count').html($count -1);
-
 			plugin.$list.find('li[data-id="' + id + '"]').remove();
+
+			plugin.update_counter();
 
 			plugin.serialize();
 
@@ -224,9 +225,19 @@
 			if( plugin.$list.find('li').length == 0 ) {
 				plugin.$list.find('.notice').show();
 			}
+
+			// add the item back to the search list
+			plugin.$search.find('li[data-id="' + id + '"]').removeClass('added');
+
+			plugin.check_limit();
 		};
 
 		plugin.search = function() {
+
+			if( plugin.limit_reached() ) {
+				alert( POST_FINDER_CONFIG.max_number_allowed );
+				return;
+			}
 
 			var html = '',
 				timeout = 500,
@@ -242,11 +253,7 @@
 			data = $.extend(data, $element.data('args'));
 
 			// display loading
-			plugin.$searchButton.prop('disabled', true);
-			plugin.$search.addClass('loading');
-			plugin.$spinner.addClass('is-active');
-			plugin.$cancel.show();
-			plugin.$statusLabel.hide();
+			plugin.disable_search();
 
 			if ('' !== query) {
 				plugin.$reset.show();
@@ -264,6 +271,7 @@
 
 							// Delay updating the post list to prevent the spinner from rapidly appearing and dissapearing when sear results are returned quickly.
 							displayTimeout = setTimeout(function(){
+
 								if ( response.posts.length > 0 ) {
 									for( var i in response.posts ) {
 										html += _.template(itemTemplate, response.posts[i]);
@@ -271,11 +279,10 @@
 								} else {
 									html = '<li>' + POST_FINDER_CONFIG.nothing_found + '</li>';
 								}
+
 								plugin.$results.html(html);
-								plugin.$results.addClass('full');
-								plugin.$spinner.removeClass('is-active');
-								plugin.$cancel.hide();
-								plugin.$searchButton.prop('disabled', false);
+								plugin.enable_search();
+
 							}, timeout);
 						}
 					},
@@ -287,9 +294,8 @@
 			plugin.$cancel.click(function(e){
 				e.preventDefault();
 				clearTimeout(displayTimeout);
-				plugin.$spinner.removeClass('is-active');
-				plugin.$cancel.hide();
-				plugin.$searchButton.prop('disabled', false);
+
+				plugin.enable_search();
 			});
 		};
 
@@ -304,6 +310,57 @@
 			});
 
 			plugin.$field.val( ids.join(',') );
+		}
+
+		plugin.limit_reached = function() {
+			var $count = plugin.$list.find('li').length;
+
+			if( $count < $element.data('limit') ) {
+				return false;
+			}
+
+			return true;
+		};
+
+		plugin.check_limit = function() {
+			if( plugin.limit_reached() ) {
+				plugin.lock();
+			} else {
+				plugin.unlock();
+			}
+		};
+
+		plugin.lock = function() {
+			plugin.$searchButton.prop('disabled', true);
+			plugin.$counter.find('.message').addClass('visible');
+			plugin.$searchContainer.hide();
+		}
+
+		plugin.unlock = function() {
+			plugin.$searchButton.prop('disabled', false);
+			plugin.$counter.find('.message').removeClass('visible');
+			plugin.$searchContainer.show();
+		}
+
+		plugin.update_counter = function() {
+			var $count = plugin.$list.find('li').length;
+
+			plugin.$counter.find('.current-count').html($count);
+		}
+
+		plugin.disable_search = function() {
+			plugin.$searchButton.prop('disabled', true);
+			plugin.$search.addClass('loading');
+			plugin.$spinner.addClass('is-active');
+			plugin.$cancel.show();
+			plugin.$statusLabel.hide();
+		}
+
+		plugin.enable_search = function() {
+			plugin.$results.addClass('full');
+			plugin.$spinner.removeClass('is-active');
+			plugin.$cancel.hide();
+			plugin.$searchButton.prop('disabled', false);
 		}
 
 		plugin.init();
