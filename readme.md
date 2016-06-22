@@ -1,6 +1,6 @@
-##Post Finder
+##Post Finder (improved)
 
-Creates a rich input field that allows a user to currate and rank posts or other custom post types
+Creates a rich input field that allows a user to currate and rank posts or other custom post types. The interface has been improved to better match the WordPress dashboard.
 
 ###Installation
 
