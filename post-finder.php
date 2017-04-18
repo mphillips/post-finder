@@ -294,9 +294,11 @@ class NS_Post_Finder {
 				?>
 			</ul>
 
+			<?php if ( ! empty( $posts ) ) : ?>
 			<p class="counter">
 				<?php printf( __( '<span class="current-count">%d</span> of <span class="max-count">%d</span> maximum items', 'post_finder' ), intval( count( $posts ) ), intval( $options['limit'] ) ); ?> <span class="message">You'll need to remove an item from the list before you can add another.</span>
 			</p>
+			<?php endif; ?>
 
 				<div class="search-container">
 
